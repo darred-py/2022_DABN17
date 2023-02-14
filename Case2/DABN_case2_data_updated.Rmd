@@ -1,0 +1,253 @@
+---
+title: "DABN_case2_data"
+output: html_document
+date: '2023-02-06'
+---
+
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Ideas:
+    - Check the profit margins of other similar companies (allabolag?)
+    - Box plot modeling minutes to time to capture hotspots throughout the day
+        - Maybe facet by weekday?
+    - Box plot modeling time of day to weekday
+    - Incorporate search data from Google?
+    - Prescriptive Ideas
+        - Need to build data analytics as service first
+    - Research market of firm
+        - Who are the factors/suppliers and the consumers?
+            - How do actions from the supplier side impact the ticket sales?
+            - How do actions/cultural movements affect ticket sales from consumer side?
+    - Can we estimate the average amount of time a search result is still relevant?
+        - We can minimize transaction costs by caching older search results
+        - Perhaps it varies with start/end locations? Or varies by density of searches?
+    - Calculate a ratio of Searches-to-Purchases
+        - How does this ratio change over the course of the day? Week? Month (if given enough data)?
+        
+    - Adjust currency pricing (to SEK?)
+     
+    
+
+```{r}
+# you may need to dowload the following package:
+# install.packages("tidyjson")
+
+library(tidyverse)
+library(tidyjson)
+library(lubridate)
+
+# change to correct path, note the "/" instead of  "\"
+path <- "C:/Users/danny/Desktop/Coding stuff/Lund University/DABN17/Case2"
+
+orders_list <- vector(mode = 'list', length = 0)
+for(i in 0:2){
+    orders_list[[paste('split_',i,sep="")]] <- readLines(paste(path, "/aob_data/aob_data/orders.split-",i,".json", sep="")) %>% #ADJUST n BEFORE RUNNING
+        spread_all() %>% 
+        tibble() %>% 
+        select(!c(1:4), !c("..JSON"))
+}
+
+meta_click_list <- vector(mode = 'list', length = 24)
+for(i in 0:23){
+    meta_click_list[[paste('split_',i,sep="")]] <- readLines(paste(path, "/aob_data/aob_data/meta_clicks.split-",i,".json", sep="")) %>% #ADJUST n BEFORE RUNNING
+        spread_all() %>% 
+        tibble() %>% 
+        # "Unpack" the json files and remove variables that carry no useful information to us, 
+        # i.e columns 1-4 (see the files for information regarding the variables):
+            # document id   - (one value for each observation)
+            # index         - (what data it refer to)
+            # id            - (not the id-variable we are interested in)
+            # score         - (1 for all datapoints)
+        select(!c(1:4), !c("..JSON"))
+}
+
+# bind together data of the same category
+orders <- bind_rows(orders_list) %>% # bind together data of the same category
+    rename_with(~sub("_source.", "", .x)) %>% # rename columns by removing leading "_source."
+    arrange(search_id) %>% # re-order by search_id
+    distinct(search_id, .keep_all = T) # remove duplicates
+
+clicks <- bind_rows(meta_click_list) %>% # bind together data of the same category
+    rename_with(~sub("_source.", "", .x)) %>% # rename columns by removing leading "_source."
+    arrange(search_id) %>% # re-order by search_id
+    distinct(search_id, .keep_all = T) # remove duplicates
+
+# merge on search id to get dataset of which clicks resulted in an order
+click_order_join <- left_join(clicks, orders, by = "search_id")
+order_click_join <- left_join(orders, clicks, by = "search_id")
+
+#remove dataframes we don't use anymore
+rm(orders_list, meta_click_list)
+```
+
+```{r}
+View(clicks[1:50,])
+View(orders[1:50,])
+
+View(click_order_join[1:50,])
+```
+
+```{r}
+clicks_updated <- clicks %>% 
+    mutate(created_at_datetime = as_datetime(created_at),
+           created_at_date = as_date(created_at),
+           created_at_wday = factor(wday(created_at_date), labels = c('S', 'M', 'T', 'W', 'Th', 'F', 'Sa')),
+           created_at_time = hour(created_at_datetime) + minute(created_at_datetime)/60,
+           created_at_hour = hour(created_at_datetime),
+           # created_at_min = minute(created_at_datetime))
+           created_at_min = factor(as.numeric(strftime(created_at_datetime, format="%M")) %/% 15, labels = c("0-15","15-30","30-45","45-60"))) %>% 
+    filter(created_at_date < "2023-01-30")
+
+click_order_join_upd <- click_order_join %>% 
+    mutate(created_at_datetime = as_datetime(created_at.x),
+           created_at_date = as_date(created_at.x),
+           created_at_wday = factor(wday(created_at_date), labels = c('S', 'M', 'T', 'W', 'Th', 'F', 'Sa')),
+           created_at_time = hour(created_at_datetime) + minute(created_at_datetime)/60,
+           created_at_hour = hour(created_at_datetime),
+           # created_at_min = minute(created_at_datetime))
+           created_at_min = factor(as.numeric(strftime(created_at_datetime, format="%M")) %/% 15, 
+                                   labels = c("0-15","15-30","30-45","45-60"))) %>% 
+    filter(created_at_date < "2023-01-30")
+
+click_order_pivot <- click_order_join %>% 
+    mutate(created_at_datetime = as_datetime(created_at.x),
+           created_at_date = as_date(created_at.x),
+           created_at_wday = factor(wday(created_at_date), labels = c('S', 'M', 'T', 'W', 'Th', 'F', 'Sa')),
+           created_at_time = hour(created_at_datetime) + minute(created_at_datetime)/60,
+           created_at_hour = hour(created_at_datetime),
+           # created_at_min = minute(created_at_datetime))
+           created_at_min = factor(as.numeric(strftime(created_at_datetime, format="%M")) %/% 15, 
+                                   labels = c("0-15","15-30","30-45","45-60"))) %>% 
+    filter(created_at_date < "2023-01-30") %>% 
+    pivot_longer(cols = c(result_set_cheapest_price, result_set_fastest_price, result_set_best_price),
+                names_to = "ticket_option", values_to = "ticket_option_price") %>% 
+    mutate(ticket_match = (itinerary_sales_price == ticket_option_price)) %>% 
+    filter(ticket_match == TRUE)
+
+# order_click_join_upd <- order_click_join %>% 
+#     mutate(created_at_datetime = as_datetime(created_at_date),
+#            created_at_date = as_date(created_at_date),
+#            created_at_wday = factor(wday(created_at_date), labels = c('S', 'M', 'T', 'W', 'Th', 'F', 'Sa')),
+#            created_at_time = hour(created_at_datetime) + minute(created_at_datetime)/60,
+#            created_at_hour = hour(created_at_datetime),
+#            # created_at_min = minute(created_at_datetime))
+#            created_at_min = factor(as.numeric(strftime(created_at_datetime, format="%M")) %/% 15, 
+#                                    labels = c("0-15","15-30","30-45","45-60"))) %>% 
+#     filter(created_at_date < "2023-01-30")
+
+View(click_order_pivot[1:50,])
+View(click_order_join_upd[1:50,])
+# View(order_click_join_upd[1:50,])
+```
+
+```{r}
+clicks_updated %>% 
+    ggplot(aes(x = created_at_wday, y = created_at_time)) +
+    geom_bin2d() +
+    theme_minimal()
+
+clicks_updated %>% 
+    ggplot(aes(x = created_at_hour)) +
+    geom_bar(position = "dodge") +
+    facet_grid(~created_at_wday) +
+    theme_linedraw() +
+    labs(x = "Hour", y = "Count", title = "Bar Plot of Clicks by Hour", subtitle = "Faceted on Weekday Groupings") +
+    scale_x_continuous(limits = c(0, 24), breaks = round(seq(0,23, length.out=24)),1) +
+    theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1, size = 7.5))
+
+clicks_updated %>% 
+    ggplot(aes(x = created_at_hour)) +
+    geom_bar(position = "dodge") +
+    theme_linedraw() +
+    labs(x = "Hour", y = "Count", title = "Bar Plot of Clicks by Hour")
+
+clicks_updated %>% 
+    ggplot(aes(x = created_at_wday)) +
+    geom_bar(position = "dodge") +
+    theme_linedraw() +
+    labs(x = "Hour", y = "Count", title = "Bar Plot of Clicks by Weekday")
+
+clicks_updated %>% 
+    ggplot(aes(x = created_at_date)) +
+    geom_bar(position = "dodge") +
+    theme_linedraw() +
+    labs(x = "Date", y = "Count", title = "Bar Plot of Clicks by Over Time")
+```
+
+```{r}
+click_order_join_upd %>% 
+    filter(paid %in% c(F,T),
+           itinerary_with_baggage %in% c(F,T)) %>% 
+    ggplot(aes(x = created_at_date, fill = paid)) +
+    geom_bar(position = "fill") +
+    theme_linedraw() +
+    labs(x = "Date", y = "Count", title = "Bar Plot of Purchased Tickets by Over Time", subtitle = "Faceted on whether baggage was included") +
+    facet_grid(~itinerary_with_baggage)
+
+click_order_join_upd %>% 
+    filter(paid %in% c(F,T),
+           itinerary_with_baggage %in% c(F,T)) %>% 
+    ggplot(aes(x = created_at_date, fill = paid)) +
+    geom_bar(position = "dodge") +
+    theme_linedraw() +
+    labs(x = "Date", y = "Count", title = "Bar Plot of Purchased Tickets by Over Time", subtitle = "Faceted on whether baggage was included") +
+    facet_grid(~itinerary_with_baggage)
+```
+
+```{r}
+click_order_join_upd %>% 
+    filter(paid %in% c(F,T),
+           is.na(itinerary_travel_time) != T) %>% 
+    mutate(itinerary_travel_time = itinerary_travel_time/60) %>% 
+    filter(itinerary_travel_time <= 15) %>% 
+    ggplot(aes(x = itinerary_travel_time, fill = paid)) +
+    geom_bar() +
+    scale_x_binned(n.breaks = 16) +
+    labs(x = "Hours", y = "Count") +
+    theme_linedraw()
+
+click_order_join_upd %>% 
+    filter(paid %in% c(F,T),
+           is.na(itinerary_travel_time) != T) %>% 
+    mutate(itinerary_travel_time = itinerary_travel_time/60) %>% 
+    filter(itinerary_travel_time <= 15) %>% 
+    ggplot(aes(x = itinerary_travel_time, fill = paid)) +
+    geom_bar(position = "fill") +
+    scale_x_binned(n.breaks = 16) +
+    labs(x = "Hours", y = "Count") +
+    theme_linedraw() +
+    scale_y_continuous(breaks = seq(0, 1, length.out=11))
+
+click_order_join_upd %>% 
+    filter(paid %in% c(F,T),
+           is.na(itinerary_travel_time) != T) %>% 
+    mutate(itinerary_travel_time = itinerary_travel_time/60) %>% 
+    filter(itinerary_travel_time > 15) %>% 
+    ggplot(aes(x = itinerary_travel_time, fill = paid)) +
+    geom_bar() +
+    scale_x_binned(n.breaks = 16) +
+    labs(x = "Hours", y = "Count") +
+    theme_linedraw()
+
+click_order_join_upd %>% 
+    filter(paid %in% c(F,T),
+           is.na(itinerary_travel_time) != T) %>% 
+    mutate(itinerary_travel_time = itinerary_travel_time/60) %>% 
+    filter(itinerary_travel_time > 15) %>% 
+    ggplot(aes(x = itinerary_travel_time, fill = paid)) +
+    geom_bar(position = "fill") +
+    scale_x_binned(n.breaks = 16) +
+    labs(x = "Hours", y = "Count") +
+    theme_linedraw() +
+    scale_y_continuous(breaks = seq(0, 1, length.out=11))
+```
+
+```{r}
+click_order_pivot %>% 
+    ggplot(aes(ticket_option)) +
+    geom_bar()
+```
+

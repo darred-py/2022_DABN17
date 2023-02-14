@@ -1,0 +1,133 @@
+---
+title: "DABN_case2_data"
+output: html_document
+date: '2023-02-06'
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# you may need to dowload the following package:
+#install.packages("tidyjson")
+
+library(tidyjson)
+
+# change to correct path, note the "/" instead of  "\"
+
+orders_0 <- readLines("C:/Users/pe5220al/OneDrive - Lund University/Office Laptop/Teaching/DABN - JSON data/Data/orders.split-0.json") %>% as.tbl_json
+
+orders_1 <- readLines("C:/Users/pe5220al/OneDrive - Lund University/Office Laptop/Teaching/DABN - JSON data/Data/orders.split-1.json") %>% as.tbl_json
+
+orders_2 <- readLines("C:/Users/pe5220al/OneDrive - Lund University/Office Laptop/Teaching/DABN - JSON data/Data/orders.split-2.json") %>% as.tbl_json
+
+
+meta_click_0 <- readLines("C:/Users/pe5220al/OneDrive - Lund University/Office Laptop/Teaching/DABN - JSON data/Data//meta_clicks.split-0.json") %>% as.tbl_json
+
+meta_click_1 <- readLines("C:/Users/pe5220al/OneDrive - Lund University/Office Laptop/Teaching/DABN - JSON data/Data//meta_clicks.split-1.json") %>% as.tbl_json
+
+meta_click_2 <- readLines("C:/Users/pe5220al/OneDrive - Lund University/Office Laptop/Teaching/DABN - JSON data/Data//meta_clicks.split-2.json") %>% as.tbl_json
+
+meta_click_3 <- readLines("C:/Users/pe5220al/OneDrive - Lund University/Office Laptop/Teaching/DABN - JSON data/Data//meta_clicks.split-3.json") %>% as.tbl_json
+
+meta_click_4 <- readLines("C:/Users/pe5220al/OneDrive - Lund University/Office Laptop/Teaching/DABN - JSON data/Data//meta_clicks.split-4.json") %>% as.tbl_json
+
+meta_click_5 <- readLines("C:/Users/pe5220al/OneDrive - Lund University/Office Laptop/Teaching/DABN - JSON data/Data//meta_clicks.split-5.json") %>% as.tbl_json
+
+meta_click_6 <- readLines("C:/Users/pe5220al/OneDrive - Lund University/Office Laptop/Teaching/DABN - JSON data/Data//meta_clicks.split-6.json") %>% as.tbl_json
+
+meta_click_7 <- readLines("C:/Users/pe5220al/OneDrive - Lund University/Office Laptop/Teaching/DABN - JSON data/Data//meta_clicks.split-7.json") %>% as.tbl_json
+
+meta_click_8 <- readLines("C:/Users/pe5220al/OneDrive - Lund University/Office Laptop/Teaching/DABN - JSON data/Data//meta_clicks.split-8.json") %>% as.tbl_json
+
+meta_click_9 <- readLines("C:/Users/pe5220al/OneDrive - Lund University/Office Laptop/Teaching/DABN - JSON data/Data//meta_clicks.split-9.json") %>% as.tbl_json
+
+meta_click_10 <- readLines("C:/Users/pe5220al/OneDrive - Lund University/Office Laptop/Teaching/DABN - JSON data/Data//meta_clicks.split-10.json") %>% as.tbl_json
+
+meta_click_11 <- readLines("C:/Users/pe5220al/OneDrive - Lund University/Office Laptop/Teaching/DABN - JSON data/Data//meta_clicks.split-11.json") %>% as.tbl_json
+
+meta_click_12 <- readLines("C:/Users/pe5220al/OneDrive - Lund University/Office Laptop/Teaching/DABN - JSON data/Data//meta_clicks.split-12.json") %>% as.tbl_json
+
+meta_click_13 <- readLines("C:/Users/pe5220al/OneDrive - Lund University/Office Laptop/Teaching/DABN - JSON data/Data//meta_clicks.split-13.json") %>% as.tbl_json
+
+meta_click_14 <- readLines("C:/Users/pe5220al/OneDrive - Lund University/Office Laptop/Teaching/DABN - JSON data/Data//meta_clicks.split-14.json") %>% as.tbl_json
+
+meta_click_15 <- readLines("C:/Users/pe5220al/OneDrive - Lund University/Office Laptop/Teaching/DABN - JSON data/Data//meta_clicks.split-15.json") %>% as.tbl_json
+
+meta_click_16 <- readLines("C:/Users/pe5220al/OneDrive - Lund University/Office Laptop/Teaching/DABN - JSON data/Data//meta_clicks.split-16.json") %>% as.tbl_json
+
+meta_click_17 <- readLines("C:/Users/pe5220al/OneDrive - Lund University/Office Laptop/Teaching/DABN - JSON data/Data//meta_clicks.split-17.json") %>% as.tbl_json
+
+meta_click_18 <- readLines("C:/Users/pe5220al/OneDrive - Lund University/Office Laptop/Teaching/DABN - JSON data/Data//meta_clicks.split-18.json") %>% as.tbl_json
+
+meta_click_19 <- readLines("C:/Users/pe5220al/OneDrive - Lund University/Office Laptop/Teaching/DABN - JSON data/Data//meta_clicks.split-19.json") %>% as.tbl_json
+
+meta_click_20 <- readLines("C:/Users/pe5220al/OneDrive - Lund University/Office Laptop/Teaching/DABN - JSON data/Data//meta_clicks.split-20.json") %>% as.tbl_json
+
+meta_click_21 <- readLines("C:/Users/pe5220al/OneDrive - Lund University/Office Laptop/Teaching/DABN - JSON data/Data//meta_clicks.split-21.json") %>% as.tbl_json
+
+meta_click_22 <- readLines("C:/Users/pe5220al/OneDrive - Lund University/Office Laptop/Teaching/DABN - JSON data/Data//meta_clicks.split-22.json") %>% as.tbl_json
+
+meta_click_23 <- readLines("C:/Users/pe5220al/OneDrive - Lund University/Office Laptop/Teaching/DABN - JSON data/Data//meta_clicks.split-23.json") %>% as.tbl_json
+
+
+#  "Unpack" the json files and remove variables that carry no useful information to us, i.e columns 1-4 (see the files for information regarding the variables):
+# document id (one value for each observation)
+# index (what data it refer to)
+# id (not the id-variable we are interested in)
+# score(1 for all datapoints)
+orders_0 <- as.data.frame(orders_0 %>% spread_all)[,-(1:4)]
+orders_1 <- as.data.frame(orders_1 %>% spread_all)[,-(1:4)]
+orders_2 <- as.data.frame(orders_2 %>% spread_all)[,-(1:4)]
+
+meta_click_0 <- as.data.frame(meta_click_0 %>% spread_all)[,-(1:4)]
+meta_click_1 <- as.data.frame(meta_click_1 %>% spread_all)[,-(1:4)]
+meta_click_2 <- as.data.frame(meta_click_2 %>% spread_all)[,-(1:4)]
+meta_click_3 <- as.data.frame(meta_click_3 %>% spread_all)[,-(1:4)]
+meta_click_4 <- as.data.frame(meta_click_4 %>% spread_all)[,-(1:4)]
+meta_click_5 <- as.data.frame(meta_click_5 %>% spread_all)[,-(1:4)]
+meta_click_6 <- as.data.frame(meta_click_6 %>% spread_all)[,-(1:4)]
+meta_click_7 <- as.data.frame(meta_click_7 %>% spread_all)[,-(1:4)]
+meta_click_8 <- as.data.frame(meta_click_8 %>% spread_all)[,-(1:4)]
+meta_click_9 <- as.data.frame(meta_click_9 %>% spread_all)[,-(1:4)]
+meta_click_10 <- as.data.frame(meta_click_10 %>% spread_all)[,-(1:4)]
+meta_click_11 <- as.data.frame(meta_click_11 %>% spread_all)[,-(1:4)]
+meta_click_12 <- as.data.frame(meta_click_12 %>% spread_all)[,-(1:4)]
+meta_click_13 <- as.data.frame(meta_click_13 %>% spread_all)[,-(1:4)]
+meta_click_14 <- as.data.frame(meta_click_14 %>% spread_all)[,-(1:4)]
+meta_click_15 <- as.data.frame(meta_click_15 %>% spread_all)[,-(1:4)]
+meta_click_16 <- as.data.frame(meta_click_16 %>% spread_all)[,-(1:4)]
+meta_click_17 <- as.data.frame(meta_click_17 %>% spread_all)[,-(1:4)]
+meta_click_18 <- as.data.frame(meta_click_18 %>% spread_all)[,-(1:4)]
+meta_click_19 <- as.data.frame(meta_click_19 %>% spread_all)[,-(1:4)]
+meta_click_20 <- as.data.frame(meta_click_20 %>% spread_all)[,-(1:4)]
+meta_click_21 <- as.data.frame(meta_click_21 %>% spread_all)[,-(1:4)]
+meta_click_22 <- as.data.frame(meta_click_22 %>% spread_all)[,-(1:4)]
+meta_click_23 <- as.data.frame(meta_click_23 %>% spread_all)[,-(1:4)]
+
+
+# bind together data of the same category
+orders <- bind_rows(orders_0, orders_1, orders_2)
+clicks <- bind_rows(meta_click_0, meta_click_1, meta_click_2,meta_click_3, meta_click_4, meta_click_5, meta_click_6, meta_click_7, meta_click_8, meta_click_9, meta_click_10, meta_click_11, meta_click_12, meta_click_13, meta_click_14, meta_click_15, meta_click_16, meta_click_17, meta_click_18, meta_click_19, meta_click_20, meta_click_21, meta_click_22, meta_click_23)
+
+#remove dataframes we don't use anymore
+rm(list=setdiff(names(environment()),c("orders", "clicks")))
+
+#change name for search id so that we can call on it
+colnames(clicks)[3] <- "search_id"
+colnames(orders)[2] <- "search_id"
+
+#order the dataframe according to search id
+clicks <- clicks[order(clicks$search_id),]
+orders <- orders[order(orders$search_id),]
+
+#remove duplicates
+clicks <- clicks[!duplicated(clicks$search_id),]
+orders <- orders[!duplicated(orders$search_id),]
+
+#merge on search id to get dataset of which clicks resulted in an order
+click_order_merge <- merge(clicks, orders, by = "search_id")
+click_order_merge <- click_order_merge[order(click_order_merge$search_id),]
+
+
+```

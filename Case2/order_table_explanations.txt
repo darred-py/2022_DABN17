@@ -1,0 +1,199 @@
+{
+  "_index": "orders",
+  "_id": "915466",
+  "_score": 1,
+  "_source": {
+    "order_id": 915466,
+    "search_id": 3576014175,
+    "gate_id": 13,
+    "order_type": "air",
+    "user_ipaddress": "83.252.224.196",
+    "paid": true,
+    "paid_at": 1641040433,
+    "paid_at_date": "2022-01-01T13:33:53+01:00",
+    "paid_transact": "3181182493",
+    "cancelled": false,
+    "cancelled_at": null,
+    "cancelled_description": null,
+    "created_at": 1641040033,
+    "created_at_date": "2022-01-01T13:27:13+01:00",
+    "midoffice_id": 1068239,
+    "midoffice_contact_id": 728274,
+    "midoffice_quotation_id": 4057226,
+    "paid_unique_id": 1068239,
+    "search_data": {
+      "search_id": 3576014175,
+      "gate_id": 13,
+      "gate_name": "Flygresor-fc",
+      "meta_search": true,
+      "meta_clicks": 1,
+      "status": "ready",
+      "process_status": 8,
+      "search_from_ip": "83.252.224.196",
+      "search_type": "air",
+      "search_parameters": {
+        "type": "return",
+        "adults": 1,
+        "cabin": "EC",
+        "rooms": [
+          {
+            "adults": 1
+          }
+        ],
+        "leg_0_origin": 6541386,
+        "leg_0_destination": 6539789,
+        "leg_0_date": 1651010400,
+        "leg_1_origin": 6539789,
+        "leg_1_destination": 6541386,
+        "leg_1_date": 1652220000
+      },
+      "created_at": 1641039174,
+      "created_at_date": "2022-01-01 13:12:54 +0100",
+      "itinerary_string": "LPI-MOW, MOW-LPI",
+      "type": "search",
+      "timestamp": 1641040448,
+      "timestamp_date": "2022-01-01T13:34:08+01:00",
+      "logreader_type": "search",
+      "searchrule_id": 595211,
+      "search_rule_version_id": 26432,
+      "flight_rule_version_id": 25891,
+      "hotel_rule_version_id": 25713,
+      "meta_rule_version_id": 25992,
+      "ancillary_rule_version_id": 25993,
+      "presentation_rule_version_id": 18584,
+      "text_rule_version_id": 26483
+    },
+    "searchrule_action_id": 1717896,
+    "type": "order",
+    "timestamp": 1641040448,
+    "timestamp_date": "2022-01-01T13:34:08+01:00",
+    "logreader_type": "order"
+  }
+}
+
+order_id: database id for the order
+
+search_id: Which search the order was created from/is related to
+
+gate_id: Which site the order was created on. Different meta-sites use different sites in order to be able to separate pricing, searches, etc between markets.
+
+order_type: "air" if it's plane tickets, can be ancillary or addon if the order is for bags (ancillary) or extra products (addon) purchased after original booking
+
+user_ipaddress: self explanatory
+
+paid: boolean to signify if the order has been paid or not
+
+paid_at: unix timestamp of when the order was paid
+
+paid_at_date: non-unix timestamp of when the order was paid
+
+paid_transact: transaction number for the payment
+
+cancelled: if the order has been cancelled or not
+
+cancelled_at: timestamp of when the order was cancelled
+
+cancelled_description: why the order was cancelled
+
+created_at: unix timestamp of when the order was created
+
+created_at_date: non-unix timestamp of when the order was created
+
+midoffice_id: database id in our "midoffice"/order management system
+
+midoffice_contact_id: db id for where to find contact information associated with the order in midoffice system
+
+midoffice_quotation_id: db id for quotation/invoice in midoffice system
+
+paid_unique_id: payment database id
+
+searchrule_action_id: which search rule action was used for the itinerary the customer selected when creating the booking
+
+type: normally order, since this is the order table.
+
+timestamp: unix timestamp
+
+timestamp_date: non-unix timestamp
+
+logreader_type: can be ignored
+
+
+
+
+
+search_data: hash of search information
+
+search_id: see above
+
+gate_id: see above
+
+gate_name: name of gate/site order was created on
+
+meta_search: boolean defining if search originated directly on our site (false) or on a meta site (true)
+
+meta_clicks: number of clicks on web hyperlink from meta site to us
+
+status: status of search. normally "ready" if search has finished
+
+process_status: what stage in our booking "flow" the customer has completed
+
+search_from_ip: ip where the search originated
+
+search_type: normally "air" (for a while we supported hotel search)
+
+created_at: unix timestamp of when the search was created
+
+created_at_date: non-unix timestamp of when the search was created
+
+itinerary_string: string containing origins and destinations of all legs for the searched trip
+
+type: normally "search"
+
+timestamp: unix
+
+timestemp_date: non-unix
+
+logreader_type: can be ignored
+
+searchrule_id: database id for which search rule matched the search
+
+search_rule_version_id: database id of which version of the search rules was used.
+
+flight_rule_version_id: database id of which version of the flight rules was used.
+
+hotel_rule_version_id: can be ignored
+
+meta_rule_version_id: database id of which version of the meta rules was used.
+
+ancillary_rule_version_id: database id of which version of the ancillary rules was used.
+
+presentation_rule_version_id: database id of which version of the presentation rules was used.
+
+text_rule_version_id: database id of which version of the text rules was used.
+
+
+
+search_parameters: hash of parameters for search
+
+type: can be oneway, return, multi depending if it's a one way trip, return trip or "open jaw"/multi city trip
+
+adults: number of adults
+
+children: number of children
+
+infants: number of infants
+
+youths: number of youths
+
+cabin: what cabin type was searched. "EC" = economy, "BU" = business, etc
+
+rooms: array containing info about hotel search. this can be safely ignored. we currently have no hotel search functionality.
+
+leg_X_origin: database id of the origin of part X of the trip. the id corresponds to an airport/city
+
+leg_X_destination: database id of the destination of part X of the trip. the id corresponds to an airport/city
+
+leg_X_date: unix date timestamp of the leg of the trip
+
+
+

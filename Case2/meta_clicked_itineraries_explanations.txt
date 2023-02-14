@@ -1,0 +1,58 @@
+{
+  "_index: "meta_clicked_itineraries",
+  "_id: "xDUthG8BAF5GeQ3JTK5D",
+  "_score: 1,
+  "_source: {
+    "id: 3764314,
+    "created_at: "2020-01-08T09:02:03.000+01:00",
+    "search_id: 2583844709,
+    "search_created_at: "2020-01-08T08:59:51.000+01:00",
+    "gate_id: 37,
+    "meta_ref: "OlTT2j_2qYt3SEEAtDHr5g",
+    "searchrule_id: 594229,
+    "searchrule_version_id: 26439,
+    "pricerule_flight_version_id: 25893,
+    "pricerule_hotel_version_id: 25724,
+    "pricerule_meta_version_id: 25999,
+    "pricerule_ancillary_version_id: 25723,
+    "presentationrule_version_id: 26298,
+    "uuid: "b3151ff859f2575b5d3d4b21d8f0fa7f",
+    "itinerary_string: "CPH-CPT, CPT-CPH",
+    "ip_address: "81.229.195.52",
+    "mobile: false
+  }
+}
+
+id: database id of the itinerary that got a click on a meta site
+
+created_at: when the click occured
+
+search_id: database id of which search the click is related to
+
+search_created_at: when the search was created
+
+gate_id: which gate/site got the click
+
+meta_ref: reference string for the click from meta
+
+searchrule_id: database id for the search
+
+searchrule_version_id: database id for the searchrule version,
+
+pricerule_flight_version_id: database id for the flight pricerule (prices locally on our site)
+
+pricerule_hotel_version_id: can be ignored
+
+pricerule_meta_version_id: database id for the meta pricerule (prices sent to meta)
+
+pricerule_ancillary_version_id: database id for the ancillary pricerule (price information related to ancillaries)
+
+presentationrule_version_id: database id for the presentation rule
+
+uuid: unique id for the meta click. used in url
+
+itinerary_string: string of all origins and destinations from the search
+
+ip_address: ip for where the search originated
+
+mobile: boolean signifying if the search was done on a mobile device (true) or a comptuter (false)
