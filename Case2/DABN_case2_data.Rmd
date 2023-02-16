@@ -168,9 +168,9 @@ library(lubridate)
 #                                    labels = c("0-15","15-30","30-45","45-60"))) %>% 
 #     filter(created_at_date < "2023-01-30")
 
-View(clicks_updated[1:50,])
-View(click_order_join_upd[1:50,])
-View(order_click_join_upd[1:50,])
+# View(clicks_updated[1:50,])
+# View(click_order_join_upd[1:50,])
+# View(order_click_join_upd[1:50,])
 ```
 
 ```{r load_SavedData}
@@ -191,7 +191,7 @@ View(click_order_join[1:50,])
 
 
 ```{r}
-clicks_updated %>%
+avg.hr <- clicks_updated %>%
     group_by(created_at_hour, created_at_wday, created_at_date) %>%
     summarise(n=n(), .groups = "keep") %>% ungroup(created_at_date) %>% 
     summarise(mean = mean(n), .groups = "keep") %>% 
@@ -204,7 +204,7 @@ clicks_updated %>%
     scale_color_brewer(palette = "Set1", name = "Weekday") +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-clicks_updated %>%
+avg.hr.mb <- clicks_updated %>%
     filter(created_at_date < "2023-01-30") %>%
     group_by(created_at_hour, mobile) %>%
     summarise(Count = n(), .groups = "keep") %>%
@@ -212,7 +212,7 @@ clicks_updated %>%
     geom_line(size=1) +
     theme_linedraw() +
     labs(x = "Hour", y = "Count",
-         title = "Average Clicks per Hour") +
+         title = "Total Clicks per Hour") +
     scale_x_continuous(breaks = seq(0,23, length.out=24), minor_breaks = NULL) +
     scale_y_continuous(labels = scales::comma) +
     scale_color_brewer(palette = "Set1", name = "Mobile") +
@@ -226,6 +226,21 @@ clicks_updated %>%
 #     labs(x = "Hour", y = "Count", title = "Bar Plot of Clicks by Hour")
 
 clicks_updated %>%
+    filter(created_at_date < "2023-01-30") %>%
+    group_by(created_at_hour, created_at_wday, mobile) %>%
+    summarise(Count = n(), .groups = "keep") %>%
+    ggplot(aes(x = created_at_hour, y=Count, col = created_at_wday)) +
+    geom_line(size=1) +
+    theme_linedraw() +
+    labs(x = "Hour", y = "Count",
+         title = "Total Clicks per Hour") +
+    scale_x_continuous(breaks = seq(0,23, length.out=24), minor_breaks = NULL) +
+    scale_y_continuous(labels = scales::comma) +
+    scale_color_brewer(palette = "Set1", name = "Weekday") +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+    facet_grid(rows = vars(mobile))
+
+loc.clicks <- clicks_updated %>%
     rowwise() %>% 
     mutate(trip.1leg = str_split_fixed(itinerary_string, pattern = ", ", n=2)[1]) %>%
     mutate(trip.start = str_split_fixed(trip.1leg, pattern = "-", n=2)[1]) %>% 
@@ -250,7 +265,7 @@ clicks_updated %>%
 ```
 
 ```{r}
-click_order_join %>% 
+time.paid <- click_order_join %>% 
     filter(paid %in% c(F,T),
            itinerary_with_baggage %in% c(F,T),
            created_at_date.x <= as.Date("2023-01-29")) %>% 
@@ -269,7 +284,7 @@ click_order_join %>%
          title = "Line Plot of Purchased Tickets Over Time", 
          subtitle = "Faceted on whether baggage was included") 
 
-click_order_join %>% 
+time.paid.mb <- click_order_join %>% 
     filter(paid %in% c(F,T),
            mobile %in% c(F,T)) %>% 
     group_by(created_at_hour, paid, mobile) %>% 
@@ -288,18 +303,17 @@ click_order_join %>%
 
 ```{r}
 click_order_join %>% 
-    filter(paid %in% c(F,T),
-           created_at_date.x < "2023-01-30") %>% 
+    filter(paid %in% c(F,T)) %>% 
     group_by(created_at_hour, paid) %>%
     summarise(Count = n(), .groups = "keep") %>% 
     # plot start
     ggplot(aes(x = created_at_hour, y=Count, col=paid)) +
     geom_line(size=1) +
-    theme_linedraw() +
+    theme_light() +
     labs(x = "Hour", y = "Count",
          title = "Total Clicks per Hour that Resulted in an Order") +
     scale_x_continuous(breaks = seq(0,23, length.out=24), minor_breaks = NULL) +
-    # scale_color_brewer(palette = "Set1", name = "Weekday") +
+    scale_color_brewer(palette = "Set1", name = "Paid?") +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=0.5, size = 7.5))
     # ggplot(aes(x = created_at_date, y = Count, col = paid)) +
     # geom_line(size = 1) +
@@ -388,20 +402,42 @@ click_order_join %>%
 ```
 
 ```{r}
-click_order_join %>% 
+click_order_join %>%
     filter(!is.na(paid),
-           !is.na(mobile),
            !is.na(itinerary_travel_time),
-           !is.na(itinerary_sales_price),
-           itinerary_sales_price < 50000) %>% 
-    ggplot(aes(x = itinerary_travel_time, y = itinerary_sales_price, col = mobile)) +
-    geom_point(alpha = 0.5, size = 0.5) +
-    scale_x_log10(label = scales::comma) +
-    scale_y_log10(label = scales::comma) +
-    labs(x = "Log of Travel Time (Minutes)", y = "Log of Ticket Price (SEK)") +
-    facet_grid(cols = vars(paid))
+           !is.na(itinerary_direct_flight),
+           !is.na(itinerary_with_baggage)) %>%
+    # ggplot(aes(x = itinerary_travel_time/60, y = meta_clicked_price, col=paid)) +
+    ggplot(aes(x = itinerary_travel_time/60, y = itinerary_sales_price_pax, col = paid)) +
+    geom_point(alpha = 0.05) +
+    geom_density2d() +
+    # geom_hex(alpha = 0.25) +
+    # geom_smooth(method = "loess") +
+    scale_x_log10(label = scales::comma, minor_breaks = NULL) +
+    scale_y_log10(label = scales::comma, minor_breaks = NULL) +
+    labs(x = "Log of Travel Time (Hours)", y = "Log of Ticket Price (SEK)") +
+    facet_grid(rows = vars(itinerary_with_baggage),
+               cols = vars(itinerary_direct_flight))
 
-click_order_join %>% 
+# click_order_join %>% 
+#     rowwise() %>% mutate(paid = if_else(is.na(paid), FALSE, paid)) %>% ungroup() %>% 
+#     filter(!is.na(itinerary_travel_time),
+#            !is.na(itinerary_direct_flight),
+#            !is.na(itinerary_with_baggage)) %>%
+#     # ggplot(aes(x = itinerary_travel_time/60, y = meta_clicked_price, col=paid)) +
+#     ggplot(aes(x = itinerary_travel_time/60, y = result_set_cheapest_price, col = paid)) +
+#     geom_point(alpha = 0.05) +
+#     geom_density2d() +
+#     # geom_hex(alpha = 0.25) +
+#     # geom_smooth(method = "loess") +
+#     scale_x_log10(label = scales::comma, minor_breaks = NULL) +
+#     scale_y_log10(label = scales::comma, minor_breaks = NULL) +
+#     labs(x = "Log of Travel Time (Hours)", y = "Log of Ticket Price (SEK)") +
+#     facet_grid(cols = vars(paid))
+```
+
+```{r}
+total.order.ct <- click_order_join %>% 
     filter(!is.na(paid),
            !is.na(mobile),
            !is.na(itinerary_travel_time),
@@ -417,5 +453,14 @@ click_order_join %>%
          subtitle = "Separated by if the order originated from a mobile click") +
     guides(colour = guide_legend(override.aes = list(alpha = 1))) +
     theme_classic()
+```
+
+```{r graph.save}
+plotlist <- list(avg.hr, avg.hr.mb, loc.clicks, time.paid, time.paid.mb, total.order.ct)
+
+for(i in 1:6){
+    ggsave(plot = plotlist[[i]], filename = paste0("ggplot_",i,".png",sep=""), device = "png")
+}
+
 ```
 
