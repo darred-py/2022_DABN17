@@ -408,8 +408,8 @@ click_order_join %>%
            !is.na(itinerary_direct_flight),
            !is.na(itinerary_with_baggage)) %>%
     # ggplot(aes(x = itinerary_travel_time/60, y = meta_clicked_price, col=paid)) +
-    ggplot(aes(x = itinerary_travel_time/60, y = itinerary_sales_price_pax, col = paid)) +
-    geom_point(alpha = 0.05) +
+    ggplot(aes(x = itinerary_travel_time/60, y = itinerary_sales_price_pax, col = itinerary_direct_flight)) +
+    geom_point(alpha = 0.1) +
     geom_density2d() +
     # geom_hex(alpha = 0.25) +
     # geom_smooth(method = "loess") +
@@ -417,7 +417,7 @@ click_order_join %>%
     scale_y_log10(label = scales::comma, minor_breaks = NULL) +
     labs(x = "Log of Travel Time (Hours)", y = "Log of Ticket Price (SEK)") +
     facet_grid(rows = vars(itinerary_with_baggage),
-               cols = vars(itinerary_direct_flight))
+               cols = vars(paid))
 
 # click_order_join %>% 
 #     rowwise() %>% mutate(paid = if_else(is.na(paid), FALSE, paid)) %>% ungroup() %>% 
