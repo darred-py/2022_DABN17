@@ -174,6 +174,9 @@ library(lubridate)
 ```
 
 ```{r load_SavedData}
+## The following code loads the saved data after it has been cleaned by
+## the code above. In order to run the graphs below, the code above needs
+## to be uncommented and ran, which in of itself takes a long time to load and clean.
 orders <- readRDS("aob_orders.rds")
 clicks_updated <- readRDS("aob_clicks_updated.rds")
 click_order_join <- left_join(clicks_updated, orders, by = "search_id") #%>% 
@@ -459,8 +462,56 @@ total.order.ct <- click_order_join %>%
 plotlist <- list(avg.hr, avg.hr.mb, loc.clicks, time.paid, time.paid.mb, total.order.ct)
 
 for(i in 1:6){
+    plot(plotlist[[i]])
     ggsave(plot = plotlist[[i]], filename = paste0("ggplot_",i,".png",sep=""), device = "png")
 }
 
+```
+
+```{r}
+airport.df <- clicks_updated %>%
+    select(itinerary_string) %>% 
+    rowwise() %>% 
+    transmute(var.test = str_split_fixed(itinerary_string, pattern = ", ", n=2)[1]) %>% #added _fixed and n() to isolate initial depart. airport
+    # ungroup() %>% #unnest(cols = c(var.test)) %>% 
+    mutate(var.test = str_split_fixed(var.test, pattern = "-", n=2)[1]) %>% #unnest(cols = c(var.test)) %>%
+    ungroup() %>% count(var.test) %>% left_join(airportr::airports, by = c("var.test" = "IATA")) %>% filter(!is.na(Latitude))
+```
+
+```{r}
+library(sf); library(ggmap); library(ggthemes)
+
+airport.sf <- airport.df %>% 
+    sf::st_as_sf(coords = c("Latitude", "Longitude"), crs = 28992) %>% 
+    sf::st_transform(crs = 4326)
+
+bbox <- sf::st_bbox(airport.sf)
+xrng <- extendrange(c(bbox$xmin, bbox$xmax))
+yrng <- extendrange(c(bbox$ymin, bbox$ymax))
+
+airport_raster <- get_stamenmap(
+  c(left   = xrng[1],
+    bottom = yrng[1],
+    right  = xrng[2],
+    top    = yrng[2]),
+  zoom = 18,
+  maptype = "terrain")
+
+airport.df.updated <- cbind(
+  st_drop_geometry(airport.sf),
+  st_coordinates(airport.sf)
+)
+# 
+# theme_set(ggthemes::theme_map(base_size = 11))
+# ggplot(airport.sf) +
+#     geom_sf(aes(size = n), alpha = 0.25) +
+#     coord_sf(
+#     xlim = c(bbox[["xmin"]], bbox[["xmax"]]),
+#     ylim = c(bbox[["ymin"]], bbox[["ymax"]])) +
+#     theme(legend.position = "right")
+
+ggmap(airport_raster) +
+  geom_point(aes(X, Y, size = n), data = airport.df.updated) +
+  theme(legend.position = "right")
 ```
 
